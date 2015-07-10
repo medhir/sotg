@@ -13,6 +13,4 @@ class BuzzfeedItem(scrapy.Item):
     description = scrapy.Field()
     link = scrapy.Field()
     body = scrapy.Field()
-    content = scrapy.Field()
-
     pass

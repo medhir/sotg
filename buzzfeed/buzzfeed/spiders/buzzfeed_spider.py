@@ -15,4 +15,8 @@ class BuzzfeedSpider(scrapy.Spider)
 
   def parse_article(self, response):
     item = BuzzfeedItem()
-    
+    item['title'] = response.xpath('//*[@id="post-title"]').extract()
+    item['description'] = response.xpath('//*[@class="description"]').extract()
+    item['link'] = response.url
+    item['body'] = response.xpath('/body').extract()
+    yield item
