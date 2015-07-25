@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 # export RDS_HOSTNAME=sotg-staging-db.ctifvcvmvtjl.us-west-2.rds.amazonaws.com
 # export RDS_USERNAME=sotg_db_user
 # export RDS_PASSWORD=sotg_db_pass
