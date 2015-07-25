@@ -2,12 +2,12 @@ var express = require('express');
 
 var app = express(),
   server, 
-  PORT = 6000;  //default port
+  PORT = process.env.PORT || 6000;  //default port
 
 require('./config/middleware.js')(app, express);
 
 module.exports = function(port) {
-  console.log('port', (port||PORT));
+  console.log('Tweet Handler listening on port', (port||PORT));
   var server = app.listen(port || PORT); 
   return server;
 };
