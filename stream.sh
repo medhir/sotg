@@ -5,7 +5,7 @@
 # export RDS_DB_NAME=sotg
 # export HANDLER_ADDRESS=localhost
 # export API_ADDRESS=sotg-staging.elasticbeanstalk.com
-# export PORT=80
+# export API_PORT=80
 # export HANDLER_PORT=6000
 
 node streaming/server.js
