@@ -143,6 +143,8 @@ module.exports = {
     };
 
     request(options, function(error, res, body) {
+      console.log("Options inside streamer request: ", options);
+      console.log("Res.body inside streamer request: ", res.body);
       key = res.body;
 
       if(res.statusCode === 400) {
