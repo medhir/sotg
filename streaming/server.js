@@ -12,7 +12,6 @@ server.set(keywords, STREAMING_SERVER_ACCESS_PORT);
 server.start();
 
 module.exports = function(port) {
-  console.log('port', (port||PORT));
   var server = app.listen(STREAMING_SERVER_SPIN_UP_PORT || port || PORT); 
   return server;
 };
