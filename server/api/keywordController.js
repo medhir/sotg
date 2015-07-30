@@ -39,21 +39,21 @@ module.exports = {
               .then(function(streamingModel) {
 
                 //TODO this if is only needed to support unit tests
-                if (streamingModel.get('ip') !== null) {
+                // if (streamingModel.get('ip') !== null) {
 
-                  streamingModel.sendToStreamingServer(keywordModel.get('keyword'), function(success) {
-                    if (success) {
-                      streamingModel.register();
-                      streamingModel.save();
-                    } else {
-                      streamingModel.unregister();
-                      streamingModel.save();
-                      keywordModel.set('streamId', null);
-                      keywordModel.save();
-                    }
-                  });
+                //   streamingModel.sendToStreamingServer(keywordModel.get('keyword'), function(success) {
+                //     if (success) {
+                //       streamingModel.register();
+                //       streamingModel.save();
+                //     } else {
+                //       streamingModel.unregister();
+                //       streamingModel.save();
+                //       keywordModel.set('streamId', null);
+                //       keywordModel.save();
+                //     }
+                //   });
 
-                }
+                // }
               });
           }
         });
@@ -82,20 +82,20 @@ module.exports = {
               .then(function(streamingModel) {
 
                 //TODO this if is only needed to support unit tests
-                if (streamingModel.get('ip') !== null) {
+                // if (streamingModel.get('ip') !== null) {
 
-                  streamingModel.deleteFromStreamingServer(keywordModel.get('keyword'), function(success) {
-                    if (success) {
-                      streamingModel.register();
-                      streamingModel.save();
-                    } else {
-                      streamingModel.unregister();
-                      streamingModel.save();
-                      keywordModel.set('streamId', null);
-                      keywordModel.save();
-                    }
-                  });
-                }
+                //   streamingModel.deleteFromStreamingServer(keywordModel.get('keyword'), function(success) {
+                //     if (success) {
+                //       streamingModel.register();
+                //       streamingModel.save();
+                //     } else {
+                //       streamingModel.unregister();
+                //       streamingModel.save();
+                //       keywordModel.set('streamId', null);
+                //       keywordModel.save();
+                //     }
+                //   });
+                // }
 
               });
           }
