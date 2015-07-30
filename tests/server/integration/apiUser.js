@@ -1,4 +1,4 @@
-process.env.PORT = PORT = 8001; // Set port for test server
+process.env.API_PORT = PORT = 8001; // Set port for test server
 process.env.NODE_TEST_ENV = 'test';
 
 var User = require('../../../server/users/userModel.js'),
