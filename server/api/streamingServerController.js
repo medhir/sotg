@@ -4,7 +4,7 @@ var db = require('../db/schema.js'),
 module.exports = {
 
   getAvailableKey: function(req, res, next) {
-    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    var ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
     console.log("req.ip: ", req.ip);
     console.log("req.headers: ", req.headers);
     console.log("req.connection.remoteAddress: ", req.connection.remoteAddress);
