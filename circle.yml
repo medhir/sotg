@@ -23,7 +23,9 @@ deployment:
     branch: master
     commands:
       - eb deploy sotg-staging --timeout 10
+      - eb deploy sotg-tweet-handler --timeout 10
+      - eb deploy sotg-streaming --timeout 10
   production:
-    branch: deployment
+    branch: production
     commands:
-      - eb deploy sotg-production --timeout 10
+      - eb deploy thesis-production --timeout 10
