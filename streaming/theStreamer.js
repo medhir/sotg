@@ -12,7 +12,7 @@ module.exports = {
       credentials = process.env.CONSUMER_KEY ? null : require('./config.js'),
       API_ADDRESS = process.env.API_ADDRESS || '127.0.0.1',
       HANDLER_ADDRESS = process.env.HANDLER_ADDRESS || '127.0.0.1',
-      API_PORT = process.env.PORT || 8000, 
+      API_PORT = process.env.API_PORT || 8000, 
       HANDLER_PORT = process.env.HANDLER_PORT || 6000; //All handler 
 
     credentials = credentials || {
@@ -143,6 +143,8 @@ module.exports = {
     };
 
     request(options, function(error, res, body) {
+      console.log("Options inside streamer request: ", options);
+      console.log("Res.body inside streamer request: ", res.body);
       key = res.body;
 
       if(res.statusCode === 400) {
