@@ -4,7 +4,7 @@ var Tweet = require('../tweets/tweetModel.js'),
   async = require('async');
 
 var saveToDB = function(tweet, callback) {
-  console.log("Saving tweet to database.");
+  // console.log("Saving tweet to database.");
   var parsedTweet = {
     tweetId: tweet.id_str,
     userId: tweet.user.id_str,
@@ -39,7 +39,7 @@ var saveToDB = function(tweet, callback) {
     .save()
     .then(function(tweet) {
       if (tweet) {
-        console.log("Saved tweet to database.", tweet.toString());
+        // console.log("Saved tweet to database.", tweet.toString());
         return callback();
       } else {
         next(new Error('Could not save tweet to the Database!'));
@@ -76,14 +76,14 @@ var nullifyGeoData = function(tweet, callback) {
       tweet.longitude = null;
     });
     tweets.save().then(function() {
-      console.log('tweets geo data updated to NULL');
+      // console.log('tweets geo data updated to NULL');
       return callback();
     });
   });
 };
 
 module.exports.addEventually = function(tweet) {
-  console.log("Pushing tweet to insertionQ");
+  // console.log("Pushing tweet to insertionQ");
   insertionQ.push(tweet);
 };
 
