@@ -6,7 +6,7 @@
 var env = process.env.NODE_TEST_ENV || process.env.NODE_ENV;
 
 var config = (process.env.RDS_HOSTNAME || process.env.MYSQL_DATABASE) ? {} : require('./config')[env];
-
+console.log(process.env.RDS_HOSTNAME);
 var hostname = process.env.RDS_HOSTNAME || process.env.MYSQL_DATABASE_SERVER || config.db.hostname;
 var username = process.env.RDS_USERNAME || process.env.MYSQL_DATABASE_USER || config.db.user;
 var password = process.env.RDS_PASSWORD || process.env.MYSQL_DATABASE_PASSWORD || config.db.password;
