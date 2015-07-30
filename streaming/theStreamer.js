@@ -43,7 +43,7 @@ module.exports = {
     //set globals 
 
     var createTimer = function() {
-      timer = new Timer((15 * 1000 * 60), {
+      timer = new Timer((1 * 1000 * 60), {
         almostDoneMS: 10000
       });
      
