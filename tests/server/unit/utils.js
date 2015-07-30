@@ -1,6 +1,8 @@
 var Utils = require('../../../server/config/utils.js'),
   User = require('../../../server/users/userModel.js'),
   ApiTransaction = require('../../../server/apiTransactions/apiTransactionModel.js'),
+  Keyword = require('../../../server/api/keywordModel.js'),
+  StreamingServer = require('../../../server/api/streamingServerModel.js'),
   db = require('../../../server/config/db.js'),
   should = require('chai').should();
 
@@ -73,6 +75,149 @@ describe('Utils', function() {
       //this forces the test to be listed when grunt test is run
       true.should.equal(true);
       done();
+    });
+  });
+
+  describe('Keyword Utils', function() {
+
+    describe('getRegisteredStreams', function() {
+      //insert user into database
+      before(function(done) {
+        db.truncateAllTables(function() {
+          done();
+        });
+      });
+
+      it('should find no registered streams', function(done) {
+        new StreamingServer({
+            registered: false
+          })
+          .save()
+          .then(function(model) {
+
+            Utils.getRegisteredStreams(function(streams) {
+              streams.length.should.equal(0);
+              done();
+            });
+          });
+      });
+
+      it('should find one registered streams', function(done) {
+        new StreamingServer({
+            registered: true
+          })
+          .save()
+          .then(function(model) {
+            Utils.getRegisteredStreams(function(streams) {
+              streams.length.should.equal(1);
+              done();
+            });
+          });
+      });
+
+      it('should find many registered streams', function(done) {
+        new StreamingServer()
+          .save()
+          .then(function(model1) {
+
+            new StreamingServer({
+                registered: true
+              })
+              .save()
+              .then(function(model2) {
+
+                new StreamingServer()
+                  .save()
+                  .then(function(model3) {
+                    Utils.getRegisteredStreams(function(streams) {
+                      streams.length.should.equal(2);
+                      done();
+                    });
+                  });
+              });
+          });
+      });
+    });
+
+    describe('getLeastUsedStream', function() {
+      var streamId1;
+      var streamId2;
+
+      //insert user into database
+      before(function(done) {
+        db.truncateAllTables(function() {
+          done();
+        });
+      });
+
+      it('should find the least used stream of 1 registered stream', function(done) {
+        new StreamingServer({
+            registered: true
+          })
+          .save()
+          .then(function(streamingModel) {
+            
+            streamId1 = streamingModel.get('key');
+
+            new Keyword({
+                streamId: streamId1,
+                keyword: 'usa'
+              })
+              .save()
+              .then(function(keywordModel) {
+
+                Utils.getLeastUsedStream(function(stream) {
+                  stream.should.be.a('object');
+                  stream.key.should.equal(streamingModel.get('key'));
+                  
+                  done();
+                });
+              });
+          });
+      });
+
+      it('should find the least used stream of 1 registered and 1 unregistered streams', function(done) {
+        new StreamingServer({
+            registered: false
+          })
+          .save()
+          .then(function(streamingModel) {
+
+            Utils.getLeastUsedStream(function(stream) {
+              stream.should.be.a('object');
+              stream.key.should.be.a('string');
+              stream.key.should.equal(streamId1);
+
+              streamId2 = streamingModel.get('key');
+              done();
+            });
+          });
+      });
+
+      it('should find the least used stream of 2 registered and 1 unregistered streams', function(done) {
+
+        new StreamingServer({
+            registered: true
+          })
+          .save()
+          .then(function(streamingModel) {
+
+            new Keyword({
+                streamId: streamId2,
+                keyword: 'cola'
+              })
+              .save()
+              .then(function(keywordModel) {
+
+                Utils.getLeastUsedStream(function(stream) {
+                  stream.should.be.a('object');
+                  stream.key.should.be.a('string');
+                  stream.key.should.equal(streamId1);
+                  done();
+                });
+              });
+          });
+      });
     });
   });
 

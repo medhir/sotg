@@ -2,6 +2,8 @@ var _ = require('underscore'),
   db = require('../db/schema.js'),
   User = require('../users/userModel.js'),
   Tweet = require('../../tweetHandler/tweets/tweetModel.js'), 
+  Keyword = require('../api/keywordModel.js'),
+  StreamingServer = require('../api/streamingServerModel.js'),
   ApiTransaction = require('../apiTransactions/apiTransactionModel.js'),
   uuid = require('uuid');
 
@@ -138,4 +140,47 @@ var insertApiTransaction = module.exports.insertApiTransaction = function(method
 var validateEmail = module.exports.validateEmail = function(email) {
   var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
   return re.test(email);
+};
+
+var getRegisteredStreams = module.exports.getRegisteredStreams = function(callback) {
+  now = new Date();
+  new StreamingServer()
+    .query('where', 'registered', '=', true) //get all streams that were used recently
+    .fetchAll()
+    .then(function(collection) {
+      var streams = [];
+
+      collection.forEach(function(stream) {
+        // streams.push(stream.get('key'));
+        streams.push(stream);
+      });
+
+      callback(streams);
+    });
+};
+
+/**
+ * Returns an object representing the least used stream
+ *@function
+ *@arg callback {function} function to be called when the least stream is found
+ */
+
+var getLeastUsedStream = module.exports.getLeastUsedStream = function(callback) {
+  /*jshint multistr: true */
+
+  db.knex.raw('select streaming_servers.key, count(*) \
+    from streaming_servers\
+    left join keywords\
+    on keywords.streamId = streaming_servers.key\
+    where streaming_servers.registered = true\
+    group by streaming_servers.key\
+    order by count( * )\
+    limit 1 ')
+    .then(function(data) {
+      if(data) {
+        callback(data[0][0]);
+      } else {
+        callback(null);
+      }
+    });
 };

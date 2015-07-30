@@ -75,6 +75,8 @@ if (process.argv[2] === 'clean') {
                   db.knex.schema.createTable('keywords_users', function(table) {
                     table.integer('User_id').unsigned().references('users.id').onDelete('CASCADE');
                     table.integer('Keyword_id').unsigned().references('keywords.id').onDelete('CASCADE');
+                    table.primary(['User_id', 'Keyword_id']);
+                    table.unique(['User_id', 'Keyword_id']);
                   }).then(function(table) {
                     console.log('Created table keywords_users');
                   });
@@ -131,6 +133,8 @@ if (process.argv[2] === 'clean') {
         table.string('key');
         table.timestamps();
         table.boolean('registered');
+        table.string('ip');
+        table.integer('port');
       }).then(function(table) {
         console.log('Created table streaming_servers');
       });
@@ -164,6 +168,9 @@ db.truncateAllTables = function(done) {
 
   });
   
+  db.knex.raw('update streaming_servers set registered = false').then(function(then) {
+
+  });
   db.knex.raw('delete from streaming_servers').then(function(then) {
 
   });

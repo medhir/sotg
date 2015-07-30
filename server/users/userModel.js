@@ -4,6 +4,8 @@ var db = require('../db/schema'),
   Promise = require('bluebird'),
   jwt = require('jwt-simple'),
   Keyword = require('../api/keywordModel.js'),
+  KeywordUser = require('../api/keywordUserModel.js'),
+  utils = require('../config/utils.js'),
   sessionUtils = require('../utils/session.js'),
   uuid = require('uuid'),
   KeywordUser = require('../api/keywordUserModel.js'),
@@ -18,7 +20,7 @@ var User = db.Model.extend({
   tableName: 'users',
   hasTimestamps: true,
   defaults: {
-    throttle: API_CALLS_PER_MINUTE,   //100 api uses per minute
+    throttle: API_CALLS_PER_MINUTE, //100 api uses per minute
     lastApiCall: new Date() //leave as default first API call
   },
 
@@ -34,6 +36,149 @@ var User = db.Model.extend({
   keywords: function() {
     // We have to require here to prevent circular requires
     return this.belongsToMany(require('../api/keywordModel.js'));
+  },
+
+  addKeyword: function(keyword, callback) {
+
+    var user = this;
+    new Keyword({
+        keyword: keyword
+      })
+      .fetch()
+      .then(function(keywordModel) {
+
+        if (keywordModel) { //if this is keyword exists already
+
+          new KeywordUser({
+              keyword_id: keywordModel.get('id'),
+              user_id: user.get('id')
+            })
+            .save()
+            .then(function(keywordUserModel) {
+              callback({
+                code: 0,
+                message: 'keyword user created'
+              });
+            })
+            .catch(function(err) { //catch duplicate error
+              callback({
+                code: 2,
+                message: 'keyword exists'
+              });
+            });
+
+        } else { //if this keyword is new
+          user.keywords()
+            .fetch()
+            .then(function(keywordCollection) {
+
+              utils.getLeastUsedStream(function(stream) {
+
+                //allow the user to add keywords even if no stream is available
+                var streamId = null;
+                if (stream) {
+                  streamId = stream.key;
+                }
+
+                new Keyword({
+                    keyword: keyword,
+                    streamId: streamId
+                  })
+                  .save()
+                  .then(function(newKeywordModel) {
+
+                    keywordCollection.attach(newKeywordModel)
+                      .then(function(newCollection) {
+                        callback({
+                          code: 1,
+                          message: 'keyword created',
+                          keywordModel: newKeywordModel
+                        });
+                      });
+                  });
+              });
+            });
+        }
+
+      });
+
+  },
+
+  getKeywords: function(done) {
+
+    this.keywords()
+      .fetch()
+      .then(function(keywordCollection) {
+        done(keywordCollection);
+      });
+  },
+
+  removeKeyword: function(keyword, done) {
+
+    var user = this;
+
+    //get the keyword object
+    new Keyword({
+        keyword: keyword
+      })
+      .fetch()
+      .then(function(keywordModel) {
+
+        if (keywordModel) {
+
+          //delete this keyword reference
+          new KeywordUser()
+            .query({
+              where: {
+                keyword_id: keywordModel.get('id'),
+                user_id: user.get('id')
+              }
+            })
+            .destroy()
+            .then(function() {
+              //check to see if other references exist for this keyword
+              new KeywordUser()
+                .query({
+                  where: {
+                    keyword_id: keywordModel.get('id')
+                  }
+                })
+                .fetchAll()
+                .then(function(keywordUserCollection) {
+
+                  if (keywordUserCollection.length === 0) {
+                    //delete the entire keyword
+                    var copy = new Keyword({
+                      keyword: keywordModel.get('keyword'),
+                      streamId: keywordModel.get('streamId')
+                    });
+                    keywordModel
+                      .destroy()
+                      .then(function() {
+                        done({
+                          code: 0,
+                          message: 'keyword deleted',
+                          keywordModel: copy
+                        });
+                      });
+
+                  } else {
+                    done({
+                      code: 1,
+                      message: 'keyword user relation deleted'
+                    });
+                  }
+
+                });
+
+            });
+        } else {
+          done({
+            code: 2,
+            message: 'unknown keyword'
+          });
+        }
+      });
   },
 
   /**
@@ -61,51 +206,55 @@ var User = db.Model.extend({
   },
 
   addUser: function(user, req, res, callback) {
-    new User({username: user.username})
-    .fetch()
-    .then(function(foundUser) {
-      if (foundUser) {
-        callback({
-          error: 'User already exists!'
-        });
-      } else {
-        // make a new user if not one
-        new User(user)
-        .save()
-        .then(function(newUser) {
-          sessionUtils.createSession(req, res, newUser.get('username'));
-        });
-      }
-    });
+    new User({
+        username: user.username
+      })
+      .fetch()
+      .then(function(foundUser) {
+        if (foundUser) {
+          callback({
+            error: 'User already exists!'
+          });
+        } else {
+          // make a new user if not one
+          new User(user)
+            .save()
+            .then(function(newUser) {
+              sessionUtils.createSession(req, res, newUser.get('username'));
+            });
+        }
+      });
   },
 
   authenticate: function(user, req, res, callback) {
-    new User({username: user.username})
-    .fetch()
-    .then(function(foundUser) {
-      if (!foundUser) {
-        callback({
-          error: 'User does not exist'
-        });
-      } else {
-        bcrypt.compare(user.password, foundUser.get('password'), function(err, isMatch) {
-          if (err) {
-            console.log("Error comparing passwords.");
-            callback({
-              error: 'Error comparing passwords.'
-            });
-          } else {
-            if (isMatch) {
-              sessionUtils.createSession(req, res, foundUser.get('username'));
-            } else {
+    new User({
+        username: user.username
+      })
+      .fetch()
+      .then(function(foundUser) {
+        if (!foundUser) {
+          callback({
+            error: 'User does not exist'
+          });
+        } else {
+          bcrypt.compare(user.password, foundUser.get('password'), function(err, isMatch) {
+            if (err) {
+              console.log("Error comparing passwords.");
               callback({
-                error: 'The password you entered does not match our records.'
+                error: 'Error comparing passwords.'
               });
+            } else {
+              if (isMatch) {
+                sessionUtils.createSession(req, res, foundUser.get('username'));
+              } else {
+                callback({
+                  error: 'The password you entered does not match our records.'
+                });
+              }
             }
-          }
-        });
-      }
-    });
+          });
+        }
+      });
   },
   /** 
    * Compares a password with the password stored in the database
@@ -150,21 +299,21 @@ var User = db.Model.extend({
 
   getProfile: function(user, callback) {
     new User(user)
-    .fetch()
-    .then(function(user) {
-      if(user) {
-        callback(null, user);
-      } else {
-        callback(new Error('Cannot find user!'));
-      }
-    });
+      .fetch()
+      .then(function(user) {
+        if (user) {
+          callback(null, user);
+        } else {
+          callback(new Error('Cannot find user!'));
+        }
+      });
   },
 
   /**
-  * Updates a users throttle 
-  *@function
-  *@arg newApiCall {Date} The date/time of the new api call
-  */
+   * Updates a users throttle 
+   *@function
+   *@arg newApiCall {Date} The date/time of the new api call
+   */
 
   updateThrottle: function(newApiCall) {
     var lastApiCall = this.get('lastApiCall');
@@ -173,7 +322,7 @@ var User = db.Model.extend({
 
     //throttleToAdd = the per second refil rate * number of seconds since last call - current api call
     throttleToAdd = (API_CALLS_PER_MINUTE / 60) * timeSinceLastCallInSeconds - 1;
-    
+
     if (throttleToAdd + this.get('throttle') > API_CALLS_PER_MINUTE) {
       this.set('throttle', API_CALLS_PER_MINUTE);
     } else {
