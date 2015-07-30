@@ -8,7 +8,7 @@ var queues = require('../config/queue.js');
 module.exports = {
   handleInsert: function(req, res, next) {
     var tweet = req.body;
-    console.log("Adding tweet to queues.");
+    // console.log("Adding tweet to queues.");
     queues.addEventually(tweet);
     res.send("Added tweet to queue.");
   },
