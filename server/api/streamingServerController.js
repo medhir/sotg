@@ -4,7 +4,11 @@ var db = require('../db/schema.js'),
 module.exports = {
 
   getAvailableKey: function(req, res, next) {
-    var ip = req.ip.substring(req.ip.lastIndexOf(':') + 1);
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    console.log("req.ip: ", req.ip);
+    console.log("req.headers: ", req.headers);
+    console.log("req.connection.remoteAddress: ", req.connection.remoteAddress);
+    // var ip = req.ip.substring(req.ip.lastIndexOf(':') + 1);
     var port = req.query.port;
     new StreamingServer()
       .query('where', 'registered', '=', 0)
